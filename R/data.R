@@ -5,6 +5,151 @@ hub_missing <- function(x) {
   if (is.numeric(x)) !is.finite(x) else is.na(x)
 }
 
+hub_normalize_names <- function(data) {
+  column_names <- trimws(sub("^\ufeff", "", names(data)))
+  blank <- is.na(column_names) | !nzchar(column_names)
+  column_names[blank] <- paste("Column", which(blank))
+  names(data) <- make.unique(column_names, sep = "_")
+  data
+}
+
+hub_validate_file <- function(path, max_bytes = 50 * 1024^2) {
+  if (length(path) != 1L || is.na(path) || !file.exists(path) || dir.exists(path)) {
+    stop("Choose an existing data file.", call. = FALSE)
+  }
+  if (length(max_bytes) != 1L || !is.finite(max_bytes) || max_bytes < 1L) {
+    stop("Import limits must be positive numbers.", call. = FALSE)
+  }
+  bytes <- file.info(path)$size
+  if (is.na(bytes) || bytes == 0) stop("The selected file is empty.", call. = FALSE)
+  if (bytes > max_bytes) {
+    stop(sprintf("The file exceeds the %.0f MB import limit.", max_bytes / 1024^2),
+         call. = FALSE)
+  }
+  invisible(bytes)
+}
+
+hub_require_reader <- function(package) {
+  if (!requireNamespace(package, quietly = TRUE)) {
+    stop(sprintf("This import requires '%s'. Run renv::restore() in the project root.", package),
+         call. = FALSE)
+  }
+}
+
+hub_validate_table <- function(data, max_rows, max_columns) {
+  if (!length(data) && !is.data.frame(data)) {
+    stop("The file has no data rows.", call. = FALSE)
+  }
+  if (!is.data.frame(data)) {
+    stop("Use a table of records: JSON must contain an array of objects, or one object per line for JSONL.",
+         call. = FALSE)
+  }
+  if (!nrow(data)) stop("The file has no data rows.", call. = FALSE)
+  if (!ncol(data)) stop("The file has no data columns. Each record needs named fields.", call. = FALSE)
+  if (nrow(data) > max_rows) {
+    stop(sprintf("The file exceeds the %s-row import limit.", format(max_rows, big.mark = ",")),
+         call. = FALSE)
+  }
+  if (ncol(data) > max_columns) {
+    stop(sprintf("The file exceeds the %s-column import limit.", max_columns), call. = FALSE)
+  }
+  complex <- names(data)[vapply(data, function(column) is.list(column) || !is.null(dim(column)), logical(1))]
+  if (length(complex)) {
+    stop(paste0("Array or list values cannot be displayed as table columns (",
+                paste(head(complex, 3L), collapse = ", "),
+                "). Expand arrays into separate rows or scalar columns before importing. Nested objects are supported."),
+         call. = FALSE)
+  }
+  hub_normalize_names(as.data.frame(data, stringsAsFactors = FALSE))
+}
+
+hub_excel_sheets <- function(path, max_bytes = 50 * 1024^2) {
+  hub_validate_file(path, max_bytes)
+  hub_require_reader("readxl")
+  tryCatch(readxl::excel_sheets(path), error = function(e) {
+    stop("The workbook could not be read. Choose a valid XLSX or XLS workbook.", call. = FALSE)
+  })
+}
+
+read_hub_file <- function(path, filename = basename(path), delimiter = ",", header = TRUE,
+                          na_strings = c("", "NA"), decimal = ".", sheet = 1,
+                          max_bytes = 50 * 1024^2, max_rows = 100000L, max_columns = 200L) {
+  hub_validate_file(path, max_bytes)
+  valid_limit <- function(value) is.numeric(value) && length(value) == 1L &&
+    is.finite(value) && value >= 1L && value == floor(value) && value < .Machine$integer.max
+  if (!valid_limit(max_rows) || !valid_limit(max_columns)) {
+    stop("Row and column import limits must be positive whole numbers.", call. = FALSE)
+  }
+  if (length(filename) != 1L || is.na(filename)) stop("Choose a data file with a supported extension.", call. = FALSE)
+  extension <- tolower(tools::file_ext(filename))
+  if (extension %in% c("csv", "tsv", "txt")) {
+    return(read_hub_data(path, delimiter = delimiter, header = header,
+                         na_strings = na_strings, max_bytes = max_bytes,
+                         max_rows = max_rows, decimal = decimal, max_columns = max_columns))
+  }
+  if (extension %in% c("xlsx", "xls")) {
+    hub_require_reader("readxl")
+    if (!is.logical(header) || length(header) != 1L || is.na(header)) {
+      stop("The header option must be TRUE or FALSE.", call. = FALSE)
+    }
+    sheets <- hub_excel_sheets(path, max_bytes = max_bytes)
+    valid_sheet <- (is.character(sheet) && length(sheet) == 1L && !is.na(sheet) && sheet %in% sheets) ||
+      (is.numeric(sheet) && length(sheet) == 1L && is.finite(sheet) && sheet >= 1L &&
+       sheet == floor(sheet) && sheet <= length(sheets))
+    if (!valid_sheet) stop("Choose an existing worksheet from the workbook.", call. = FALSE)
+    data <- tryCatch(
+      withCallingHandlers(
+        readxl::read_excel(path, sheet = sheet, col_names = header,
+                           na = unique(c("", as.character(na_strings))),
+                           n_max = as.integer(max_rows) + 1L, .name_repair = "minimal"),
+        warning = function(w) stop(paste0("Worksheet import warning: ", conditionMessage(w),
+                                           ". Convert mixed-type columns to text or use CSV."), call. = FALSE)
+      ),
+      error = function(e) stop(paste0("The worksheet could not be imported. ", conditionMessage(e)), call. = FALSE)
+    )
+    return(hub_validate_table(data, max_rows, max_columns))
+  }
+  if (!extension %in% c("json", "jsonl", "ndjson")) {
+    stop("Choose CSV, TSV, TXT, XLSX, XLS, JSON, JSONL, or NDJSON.", call. = FALSE)
+  }
+  hub_require_reader("jsonlite")
+  connection <- file(path, open = "rb")
+  bytes <- tryCatch(readBin(connection, what = "raw", n = file.info(path)$size),
+                     finally = close(connection))
+  if (any(bytes == as.raw(0))) stop("Choose a UTF-8 JSON text file without binary data.", call. = FALSE)
+  text <- rawToChar(bytes)
+  text <- iconv(text, from = "UTF-8", to = "UTF-8", sub = NA_character_)
+  if (is.na(text)) stop("JSON files must use UTF-8 text encoding.", call. = FALSE)
+  text <- sub("^\ufeff", "", text)
+  if (extension == "json") {
+    # Check the top-level shape before passing text to fromJSON, which also
+    # accepts URLs and file names as its input argument.
+    if (!startsWith(trimws(text), "[")) {
+      stop("JSON must contain an array of record objects, for example [{\"name\":\"A\",\"score\":12}].",
+           call. = FALSE)
+    }
+    data <- tryCatch(jsonlite::fromJSON(text, flatten = TRUE), error = function(e) {
+      stop("The JSON could not be parsed. Check commas, quotes, and brackets.", call. = FALSE)
+    })
+  } else {
+    lines <- strsplit(text, "\n", fixed = TRUE)[[1L]]
+    lines <- lines[nzchar(trimws(lines))]
+    if (length(lines) > max_rows) {
+      stop(sprintf("The file exceeds the %s-row import limit.", format(max_rows, big.mark = ",")),
+           call. = FALSE)
+    }
+    if (!length(lines)) stop("The file has no data rows.", call. = FALSE)
+    if (!all(startsWith(trimws(lines), "{"))) {
+      stop("JSONL and NDJSON require one record object per line.", call. = FALSE)
+    }
+    connection <- textConnection(lines, open = "r")
+    data <- tryCatch(jsonlite::stream_in(connection, verbose = FALSE, flatten = TRUE),
+                     error = function(e) stop("The JSONL could not be parsed. Use one complete JSON object per line.", call. = FALSE),
+                     finally = close(connection))
+  }
+  hub_validate_table(data, max_rows, max_columns)
+}
+
 read_hub_data <- function(path, delimiter = ",", header = TRUE,
                           na_strings = c("", "NA"),
                           max_bytes = 50 * 1024^2, max_rows = 100000L,
@@ -88,11 +233,7 @@ read_hub_data <- function(path, delimiter = ",", header = TRUE,
     stop(sprintf("The file exceeds the %s-row import limit.", format(max_rows, big.mark = ",")),
          call. = FALSE)
   }
-  column_names <- trimws(sub("^\ufeff", "", names(data)))
-  blank <- is.na(column_names) | !nzchar(column_names)
-  column_names[blank] <- paste("Column", which(blank))
-  names(data) <- make.unique(column_names, sep = "_")
-  data
+  hub_normalize_names(data)
 }
 
 data_profile <- function(data) {

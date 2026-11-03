@@ -71,7 +71,7 @@ test_that("failed imports preserve the current dataset and expose useful errors"
   testServer(server, {
     session$setInputs(import = 1L)
     expect_equal(status()$type, "error")
-    expect_match(status()$text, "Choose a CSV", fixed = TRUE)
+    expect_match(status()$text, "Choose a data file", fixed = TRUE)
     original <- current_data()
     session$setInputs(file = list(name = "broken.csv", datapath = malformed),
       delimiter = ",", decimal = ".", header = TRUE, na_values = "NA", import = 2L)
@@ -80,7 +80,7 @@ test_that("failed imports preserve the current dataset and expose useful errors"
     expect_identical(current_data(), original)
     expect_match(output$import_status$html, 'role="alert"', fixed = TRUE)
     session$setInputs(file = list(name = "data.rds", datapath = malformed), import = 3L)
-    expect_match(status()$text, "Choose a CSV, TSV, or TXT", fixed = TRUE)
+    expect_match(status()$text, "JSON", fixed = TRUE)
     expect_identical(current_data(), original)
   })
 })
@@ -129,5 +129,55 @@ test_that("text-only data shows a useful statistics empty state and demo can res
     expect_equal(nrow(current_data()), 36L)
     expect_null(status())
     expect_equal(nrow(read.csv(output$sample_download)), 36L)
+  })
+})
+
+test_that("JSON records flow through preview, grouping, summaries and exports", {
+  path <- fixture(c('[',
+    '{"school":"North","class":"A","score":12.5},',
+    '{"school":"North","class":"A","score":null},',
+    '{"school":"South","class":"A","score":15.5}', ']'), ".json")
+  on.exit(unlink(path))
+  testServer(server, {
+    session$setInputs(file = list(name = "observations.json", datapath = path),
+      groups = c("school", "class"), variable = "score", import = 1L)
+    expect_equal(status()$type, "success")
+    expect_equal(dataset()$name, "observations.json")
+    expect_match(output$import_options$html, "Nested object fields", fixed = TRUE)
+    expect_equal(current_data()$score, c(12.5, NA, 15.5))
+    expect_equal(profile()$missing, 1)
+    expect_match(output$statistics$html, "14", fixed = TRUE)
+    expect_match(output$preview, "North", fixed = TRUE)
+    groups <- grouped()
+    expect_equal(nrow(groups), 4L)
+    expect_equal(groups$rows[groups$depth == 1], c(2L, 1L))
+    expect_equal(nrow(read.csv(output$download)), 3L)
+  })
+})
+
+test_that("Excel worksheet selection imports the chosen sheet and recovers from bad names", {
+  path <- tempfile(fileext = ".xlsx")
+  file.copy(readxl::readxl_example("datasets.xlsx"), path)
+  on.exit(unlink(path))
+  testServer(server, {
+    session$setInputs(file = list(name = "workbook.xlsx", datapath = path),
+      delimiter = ",", decimal = ".", header = TRUE, na_values = "NA", sheet = "mtcars",
+      groups = character(), variable = "mpg", import = 1L)
+    expect_equal(status()$type, "success")
+    expect_equal(dataset()$name, "workbook.xlsx")
+    expect_match(output$import_options$html, "Worksheet", fixed = TRUE)
+    expect_match(output$import_options$html, "chickwts", fixed = TRUE)
+    expect_equal(nrow(current_data()), 32L)
+    expect_true("mpg" %in% profile()$numeric_columns)
+    session$setInputs(sheet = "chickwts", variable = "weight", import = 2L)
+    expect_equal(status()$type, "success")
+    expect_equal(nrow(current_data()), 71L)
+    expect_equal(names(current_data()), c("weight", "feed"))
+    expect_equal(nrow(read.csv(output$download)), 71L)
+    imported <- current_data()
+    session$setInputs(sheet = "nonexistent worksheet", import = 3L)
+    expect_equal(status()$type, "error")
+    expect_match(tolower(status()$text), "sheet", fixed = TRUE)
+    expect_identical(current_data(), imported)
   })
 })

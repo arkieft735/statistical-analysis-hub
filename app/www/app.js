@@ -11,7 +11,7 @@ $(function () {
     });
     const current = document.querySelector(".breadcrumb strong");
     if (links[value] && current) {
-      const titles = { data: "Data explorer", groups: "Nested groups", stats: "Descriptive statistics" };
+      const titles = { data: "Data", groups: "Nested groups", stats: "Summary" };
       current.textContent = titles[value];
     }
   }

@@ -14,9 +14,9 @@ panel_header <- function(title, subtitle = NULL, extra = NULL) {
   div(class = "panel-header", div(h2(class = "panel-title", title),
       if (!is.null(subtitle)) p(class = "panel-subtitle", subtitle)), extra)
 }
-metric <- function(label, value, note) {
+metric <- function(label, value, note = NULL) {
   div(class = "metric-card", div(class = "metric-label", label),
-      div(class = "metric-value", value), div(class = "metric-note", note))
+      div(class = "metric-value", value), if (!is.null(note)) div(class = "metric-note", note))
 }
 format_number <- function(x) {
   if (!length(x) || is.na(x)) "—" else format(round(x, 2), big.mark = ",", trim = TRUE)
@@ -29,48 +29,37 @@ ui <- fluidPage(
             tags$meta(name = "viewport", content = "width=device-width, initial-scale=1")),
   div(class = "app-shell",
     tags$aside(class = "sidebar",
-      div(class = "brand", div(class = "brand-mark", "Σ"),
-          div(div(class = "brand-name", "Statistical", tags$br(), "Analysis Hub"),
-              div(class = "brand-subtitle", "Research workspace"))),
-      p(class = "sidebar-label", "Workspace"),
+      div(class = "brand", div(class = "brand-name", "Analysis Hub")),
       tags$nav(class = "nav-list", `aria-label` = "Workspace navigation",
-        actionLink("nav_data", label = tagList(span(class = "nav-icon", "▦"), "Data explorer"), class = "nav-item"),
-        actionLink("nav_groups", label = tagList(span(class = "nav-icon", "⋈"), "Nested groups"), class = "nav-item"),
-        actionLink("nav_stats", label = tagList(span(class = "nav-icon", "↗"), "Descriptive statistics"), class = "nav-item")),
-      div(class = "sidebar-footer", strong("A little structure. More insight."),
-          "Import, explore, and understand your data.", tags$br(),
-          tags$a(href = "https://github.com/arkieft735/statistical-analysis-hub", target = "_blank", rel = "noopener noreferrer", "Project on GitHub ↗"))),
+        actionLink("nav_data", label = "Data", class = "nav-item"),
+        actionLink("nav_groups", label = "Nested groups", class = "nav-item"),
+        actionLink("nav_stats", label = "Summary", class = "nav-item")),
+      div(class = "sidebar-footer", "Statistical Analysis Hub", tags$br(),
+          tags$a(href = "https://github.com/arkieft735/statistical-analysis-hub", target = "_blank", rel = "noopener noreferrer", "View source ↗"))),
     tags$main(class = "workspace",
-      div(class = "topbar", div(class = "breadcrumb", "Workspace", span(class = "separator", "/"), strong("Data explorer")),
-          span(class = "topbar-note", "Session-based workspace")),
-      div(class = "page-heading", p(class = "eyebrow", "From observations to understanding"),
-        div(class = "heading-row", h1(class = "page-title", "Every insight starts with data."),
-            span(class = "status-pill", "R + Shiny")),
-        p(class = "page-description", "Bring your dataset, map its structure, and make room for better questions.")),
+      div(class = "topbar", div(class = "breadcrumb", "Workspace", span(class = "separator", "/"), strong("Data"))),
+      div(class = "page-heading", h1(class = "page-title", "Explore your data"),
+        p(class = "page-description", "Import a dataset, inspect its columns, and explore nested groups.")),
       div(class = "import-layout",
         div(class = "panel import-card",
-          panel_header(tagList(span(class = "step-number", "01"), "Import your data"), "A clean starting point for your analysis."),
+          panel_header("Import data"),
           div(class = "import-body",
-            div(class = "upload-zone", strong("Your next discovery lives here"),
-                p("CSV · TSV · delimited TXT / up to 50 MB"),
-                fileInput("file", label = "Choose a dataset", accept = c(".csv", ".tsv", ".txt"),
-                          buttonLabel = "Browse files", placeholder = "No file selected")),
-            div(class = "field-grid",
-                selectInput("delimiter", "Delimiter", c("Comma (,)" = ",", "Tab" = "\t", "Semicolon (;)" = ";", "Pipe (|)" = "|")),
-                selectInput("decimal", "Decimal mark", c("Period (.)" = ".", "Comma (,)" = ","))),
-            checkboxInput("header", "First row contains column names", TRUE),
-            textInput("na_values", "Missing-value markers", "NA, N/A, NULL"),
-            p(class = "hint", "Separate markers with commas. Empty cells are always treated as missing. UTF-8 text; up to 100,000 rows and 200 columns."),
-            actionButton("import", "Import dataset →", class = "btn-primary"),
+            div(class = "upload-zone",
+                fileInput("file", label = "Data file", accept = c(".csv", ".tsv", ".txt", ".xlsx", ".xls", ".json", ".jsonl", ".ndjson"),
+                          buttonLabel = "Choose file", placeholder = "No file selected"),
+                p("CSV, TSV, TXT, Excel, JSON, or JSON Lines")),
+            uiOutput("import_options"),
+            p(class = "hint", "Up to 50 MB, 100,000 rows, and 200 columns."),
+            actionButton("import", "Import data", class = "btn-primary"),
             uiOutput("import_status"),
-            div(class = "sample-callout", p("Just looking around?"),
-                actionButton("sample", "Load example dataset", class = "btn-secondary"),
-                p(class = "hint", "36 students, nested in classes and schools.")),
-            downloadButton("sample_download", "Download example CSV", class = "btn-link"))),
+            div(class = "sample-callout",
+                actionButton("sample", "Use sample data", class = "btn-secondary"),
+                p(class = "hint", "36 students · 6 classes · 3 schools")),
+            downloadButton("sample_download", "Download sample CSV", class = "btn-link"))),
         div(class = "data-workspace",
           uiOutput("metrics"),
           div(class = "panel preview-panel",
-            panel_header(uiOutput("dataset_title"), "Explore the details. Then look at the bigger picture.", uiOutput("dataset_badge")),
+            panel_header(uiOutput("dataset_title", inline = TRUE), extra = uiOutput("dataset_badge", inline = TRUE)),
             div(class = "section-tabs",
               tabsetPanel(id = "view", type = "tabs",
                 tabPanel("Data preview", value = "data",
@@ -89,7 +78,7 @@ ui <- fluidPage(
                       p(class = "hint", "Select up to 8 columns from outermost to innermost. Remove and reselect a column to change its order. Repeated class names remain separate within each parent.")),
                     uiOutput("hierarchy_path"), uiOutput("hierarchy"),
                     downloadButton("groups_download", "Export group counts", class = "btn-secondary"))),
-                tabPanel("Descriptive statistics", value = "stats",
+                tabPanel("Summary", value = "stats",
                   div(class = "panel-body",
                     selectInput("variable", "Numeric variable", choices = NULL),
                     uiOutput("statistics"),
@@ -103,6 +92,30 @@ server <- function(input, output, session) {
   dataset <- reactiveVal(NULL)
   status <- reactiveVal(NULL)
   page <- reactiveVal(1L)
+  file_extension <- reactive({
+    if (is.null(input$file)) "csv" else tolower(tools::file_ext(input$file$name))
+  })
+  output$import_options <- renderUI({
+    ext <- file_extension()
+    if (ext %in% c("json", "jsonl", "ndjson")) {
+      return(p(class = "hint", "Use an array of records for JSON, or one record per line for JSON Lines. Nested object fields become columns with dotted names."))
+    }
+    excel <- ext %in% c("xlsx", "xls")
+    sheet_control <- if (excel) {
+      tryCatch({
+        sheets <- hub_excel_sheets(input$file$datapath)
+        selectInput("sheet", "Worksheet", choices = sheets, selected = head(sheets, 1L))
+      }, error = function(e) div(class = "notification error", role = "alert", conditionMessage(e)))
+    }
+    tagList(
+      sheet_control,
+      if (!excel) div(class = "field-grid",
+        selectInput("delimiter", "Delimiter", c("Comma (,)" = ",", "Tab" = "\t", "Semicolon (;)" = ";", "Pipe (|)" = "|"), selected = if (ext == "tsv") "\t" else ","),
+        selectInput("decimal", "Decimal mark", c("Period (.)" = ".", "Comma (,)" = ","))),
+      checkboxInput("header", "First row contains column names", TRUE),
+      textInput("na_values", "Missing-value markers", "NA, N/A, NULL"),
+      p(class = "hint", "Separate markers with commas. Empty cells are treated as missing."))
+  })
 
   set_dataset <- function(data, name, demo = FALSE) {
     dataset(list(data = data, name = name, demo = demo))
@@ -121,22 +134,24 @@ server <- function(input, output, session) {
   load_sample()
   observeEvent(input$sample, load_sample())
   observeEvent(input$file, {
-    ext <- tolower(tools::file_ext(input$file$name))
-    updateSelectInput(session, "delimiter", selected = if (ext == "tsv") "\t" else ",")
-    status(list(type = "info", text = "File selected. Check the options, then import your dataset."))
+    status(list(type = "info", text = "File selected. Check the options, then select Import data."))
   })
   observeEvent(input$import, {
     if (is.null(input$file)) {
-      status(list(type = "error", text = "Choose a CSV, TSV, or TXT file first."))
+      status(list(type = "error", text = "Choose a data file first."))
       return()
     }
     tryCatch({
       ext <- tolower(tools::file_ext(input$file$name))
-      if (!ext %in% c("csv", "tsv", "txt")) stop("Choose a CSV, TSV, or TXT file.", call. = FALSE)
-      markers <- unique(c("", trimws(strsplit(input$na_values, ",", fixed = TRUE)[[1]])))
-      data <- read_hub_data(input$file$datapath, delimiter = input$delimiter,
-                            header = isTRUE(input$header), na_strings = markers,
-                            decimal = input$decimal)
+      if (!ext %in% c("csv", "tsv", "txt", "xlsx", "xls", "json", "jsonl", "ndjson")) {
+        stop("Choose a CSV, TSV, TXT, Excel, JSON, or JSON Lines file.", call. = FALSE)
+      }
+      markers <- if (is.null(input$na_values)) c("", "NA", "N/A", "NULL") else unique(c("", trimws(strsplit(input$na_values, ",", fixed = TRUE)[[1]])))
+      data <- read_hub_file(input$file$datapath, filename = input$file$name,
+                            delimiter = if (is.null(input$delimiter)) "," else input$delimiter,
+                            header = if (is.null(input$header)) TRUE else isTRUE(input$header), na_strings = markers,
+                            decimal = if (is.null(input$decimal)) "." else input$decimal,
+                            sheet = if (is.null(input$sheet) || !nzchar(input$sheet)) 1L else input$sheet)
       set_dataset(data, input$file$name)
       status(list(type = "success", text = sprintf("Imported %s rows successfully.", format(nrow(data), big.mark = ","))))
     }, error = function(e) status(list(type = "error", text = conditionMessage(e))))
@@ -148,7 +163,7 @@ server <- function(input, output, session) {
   current_data <- reactive({ req(dataset()); dataset()$data })
   profile <- reactive(data_profile(current_data()))
   output$dataset_title <- renderUI(span(dataset()$name))
-  output$dataset_badge <- renderUI(span(class = "dataset-badge", if (dataset()$demo) "EXAMPLE DATA" else "IMPORTED"))
+  output$dataset_badge <- renderUI(span(class = "dataset-source", if (dataset()$demo) "Sample data" else "Imported"))
   output$import_status <- renderUI({
     message <- status()
     if (is.null(message)) return(NULL)
@@ -156,9 +171,8 @@ server <- function(input, output, session) {
   })
   output$metrics <- renderUI({
     p <- profile()
-    div(class = "metrics-grid", metric("Observations", format(p$rows, big.mark = ","), "Rows in your dataset"),
-      metric("Variables", p$columns, paste(length(p$numeric_columns), "numeric columns")),
-      metric("Missing values", format(p$missing, big.mark = ","), "Includes non-finite values"))
+    div(class = "metrics-grid", metric("Rows", format(p$rows, big.mark = ",")),
+      metric("Columns", p$columns), metric("Missing / non-finite", format(p$missing, big.mark = ",")))
   })
   filtered_data <- reactive({
     data <- current_data()
@@ -234,8 +248,8 @@ server <- function(input, output, session) {
     values <- current_data()[[input$variable]]
     values <- values[is.finite(values)]
     validate(need(length(values), "This column has no finite observations."))
-    par(mar = c(4, 4, 1, 1), fg = "#737b8e", col.axis = "#737b8e", col.lab = "#737b8e", family = "sans")
-    hist(values, breaks = "Sturges", col = "#7771f4", border = "#ffffff", main = "", xlab = input$variable, ylab = "Observations")
+    par(mar = c(4, 4, 1, 1), fg = "#73726c", col.axis = "#73726c", col.lab = "#73726c", family = "sans", bg = "#faf9f5")
+    hist(values, breaks = "Sturges", col = "#d97757", border = "#faf9f5", main = "", xlab = input$variable, ylab = "Observations")
   }, res = 110, alt = "Histogram of the selected numeric variable")
   output$download <- downloadHandler(filename = function() "imported-data.csv", content = function(file) {
     utils::write.csv(current_data(), file, row.names = FALSE, na = "")

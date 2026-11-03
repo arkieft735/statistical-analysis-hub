@@ -118,4 +118,94 @@ expect_error(numeric_summary(numeric, "note"), "numeric")
 
 sample <- read_hub_data(file.path("examples", "classroom-study.csv"))
 stopifnot(nrow(sample) == 36L, ncol(sample) == 7L)
+stopifnot(identical(read_hub_file(file.path("examples", "classroom-study.csv")), sample),
+          ncol(read_hub_file(file.path("examples", "classroom-study.tsv"), delimiter = "\t")) == 7L)
+with_file("A;1,5", function(path) {
+  imported <- read_hub_file(path, "data.txt", delimiter = ";", header = FALSE, decimal = ",")
+  stopifnot(imported$V2[1] == 1.5)
+  expect_error(read_hub_file(path, "data.zip"), "Choose CSV")
+})
+
+if (requireNamespace("jsonlite", quietly = TRUE)) {
+  for (example in c("examples/classroom-study.json", "examples/classroom-study.jsonl")) {
+    imported <- read_hub_file(example)
+    stopifnot(nrow(imported) == 36L, ncol(imported) == 7L,
+              all(c("student.id", "student.age") %in% names(imported)))
+  }
+  with_file('[{"school":{"name":"North","class":{"name":"A"}},"score":8},{"school":{"name":"South","class":{"name":"A"}},"score":null}]', function(path) {
+    imported <- read_hub_file(path, "study.json")
+    stopifnot(nrow(imported) == 2L, imported$school.name[1] == "North",
+              imported$school.class.name[2] == "A", is.na(imported$score[2]),
+              nrow(hierarchy_summary(imported, c("school.name", "school.class.name"))) == 4L)
+    expect_error(read_hub_file(path, "study.json", max_rows = 1L), "row import limit")
+    expect_error(read_hub_file(path, "study.json", max_columns = 1L), "column import limit")
+    expect_error(read_hub_file(path, "study.json", max_bytes = 1L), "MB import limit")
+  })
+  with_file(c('{"school":{"name":"North"},"score":8}', '',
+              '{"school":{"name":"South"},"score":null}'), function(path) {
+    for (extension in c("jsonl", "ndjson")) {
+      imported <- read_hub_file(path, paste0("study.", extension))
+      stopifnot(nrow(imported) == 2L, imported$school.name[2] == "South", is.na(imported$score[2]))
+    }
+    expect_error(read_hub_file(path, "study.jsonl", max_rows = 1L), "row import limit")
+  })
+  with_file('[{" score ":1,"":2}]', function(path) {
+    stopifnot(identical(names(read_hub_file(path, "study.json")), c("score", "Column 2")))
+  })
+  with_file('[{"score":}]', function(path) {
+    expect_error(read_hub_file(path, "study.json"), "could not be parsed")
+  })
+  with_file('{"records":[{"score":1}]}', function(path) {
+    expect_error(read_hub_file(path, "study.json"), "array of record objects")
+  })
+  with_file('[1,2,3]', function(path) {
+    expect_error(read_hub_file(path, "study.json"), "table of records")
+  })
+  with_file('[]', function(path) {
+    expect_error(read_hub_file(path, "study.json"), "no data rows")
+  })
+  with_file('[{"score":[1,2]}]', function(path) {
+    expect_error(read_hub_file(path, "study.json"), "Expand arrays")
+  })
+  with_file(c('{"score":[1,2]}', '{"score":[3]}'), function(path) {
+    expect_error(read_hub_file(path, "study.jsonl"), "Expand arrays")
+  })
+  with_file(c('{"score":1}', 'not json'), function(path) {
+    expect_error(read_hub_file(path, "study.jsonl"), "one record object per line")
+  })
+  with_file(c('{"score":1}', '{"score":}'), function(path) {
+    expect_error(read_hub_file(path, "study.jsonl"), "could not be parsed")
+  })
+  invalid_utf8 <- tempfile()
+  writeBin(c(charToRaw('[{"name":"'), as.raw(255), charToRaw('"}]')), invalid_utf8)
+  expect_error(read_hub_file(invalid_utf8, "study.json"), "UTF-8")
+  unlink(invalid_utf8)
+} else message("JSON import tests skipped: install the locked jsonlite package with renv::restore().")
+
+if (requireNamespace("readxl", quietly = TRUE)) {
+  for (extension in c("xlsx", "xls")) {
+    workbook <- readxl::readxl_example(paste0("datasets.", extension))
+    sheets <- hub_excel_sheets(workbook)
+    stopifnot(all(c("mtcars", "chickwts") %in% sheets))
+    imported <- read_hub_file(workbook, sheet = "mtcars")
+    stopifnot(nrow(imported) == 32L, ncol(imported) == 11L, imported$mpg[1] == 21)
+    stopifnot(nrow(read_hub_file(workbook, sheet = "chickwts")) == 71L)
+    stopifnot(nrow(read_hub_file(workbook, sheet = 1, header = FALSE)) == 33L)
+    missing <- read_hub_file(workbook, sheet = "chickwts", na_strings = c("", "horsebean"))
+    stopifnot(anyNA(missing$feed))
+    expect_error(read_hub_file(workbook, sheet = "missing"), "existing worksheet")
+    expect_error(read_hub_file(workbook, max_rows = 1L), "row import limit")
+    expect_error(read_hub_file(workbook, max_columns = 1L), "column import limit")
+    expect_error(read_hub_file(workbook, max_bytes = 1L), "MB import limit")
+    # Shiny upload paths need not retain the original filename extension.
+    uploaded <- tempfile()
+    file.copy(workbook, uploaded)
+    stopifnot(identical(hub_excel_sheets(uploaded), sheets),
+              nrow(read_hub_file(uploaded, paste0("study.", extension), sheet = "mtcars")) == 32L)
+    unlink(uploaded)
+  }
+  with_file("not a workbook", function(path) {
+    expect_error(hub_excel_sheets(path), "valid XLSX or XLS")
+  })
+} else message("Excel import tests skipped: install the locked readxl package with renv::restore().")
 cat("All data helper tests passed.\n")
