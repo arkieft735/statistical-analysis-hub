@@ -1,0 +1,14 @@
+Type: Project
+Title: Statistical Analysis Hub
+Version: 0.1.0
+Description: An R Shiny workspace for delimited data imports, hierarchical
+    groups, and descriptive exploration.
+License: MIT
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports:
+    htmltools,
+    shiny (>= 1.9.0)
+Suggests:
+    renv,
+    testthat
