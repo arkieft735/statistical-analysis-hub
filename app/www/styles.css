@@ -55,6 +55,8 @@ button, input, select, textarea { font: inherit; }
 .page-description { max-width: 650px; margin: 13px 0 0; color: #73726c; font-size: 14px; line-height: 1.7; }
 .eyebrow, .status-pill, .dataset-badge { display: none; }
 .dataset-source { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.panel-header > div:first-child { min-width: 0; }
+.panel-title { overflow-wrap: anywhere; }
 
 .import-layout { display: grid; grid-template-columns: 292px minmax(0, 1fr); align-items: start; gap: 42px; }
 .panel { min-width: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
@@ -248,3 +250,4 @@ input[type="checkbox"], input[type="radio"] { margin-top: 3px; accent-color: #4d
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
+.footer-note, .metric-note, .hierarchy-count { color: var(--muted); }

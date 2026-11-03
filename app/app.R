@@ -45,9 +45,9 @@ ui <- fluidPage(
           panel_header("Import data"),
           div(class = "import-body",
             div(class = "upload-zone",
-                fileInput("file", label = "Data file", accept = c(".csv", ".tsv", ".txt", ".xlsx", ".xls", ".json", ".jsonl", ".ndjson"),
+                fileInput("file", label = "Data file", accept = c(".csv", ".tsv", ".txt", ".xlsx", ".xls", ".json", ".jsonl", ".ndjson", ".rds"),
                           buttonLabel = "Choose file", placeholder = "No file selected"),
-                p("CSV, TSV, TXT, Excel, JSON, or JSON Lines")),
+                p("CSV, TSV, TXT, Excel, JSON, JSON Lines, or RDS")),
             uiOutput("import_options"),
             p(class = "hint", "Up to 50 MB, 100,000 rows, and 200 columns."),
             actionButton("import", "Import data", class = "btn-primary"),
@@ -97,6 +97,9 @@ server <- function(input, output, session) {
   })
   output$import_options <- renderUI({
     ext <- file_extension()
+    if (ext == "rds") {
+      return(p(class = "hint", "RDS files must contain a data frame or tibble. Column types are preserved."))
+    }
     if (ext %in% c("json", "jsonl", "ndjson")) {
       return(p(class = "hint", "Use an array of records for JSON, or one record per line for JSON Lines. Nested object fields become columns with dotted names."))
     }
@@ -143,8 +146,8 @@ server <- function(input, output, session) {
     }
     tryCatch({
       ext <- tolower(tools::file_ext(input$file$name))
-      if (!ext %in% c("csv", "tsv", "txt", "xlsx", "xls", "json", "jsonl", "ndjson")) {
-        stop("Choose a CSV, TSV, TXT, Excel, JSON, or JSON Lines file.", call. = FALSE)
+      if (!ext %in% c("csv", "tsv", "txt", "xlsx", "xls", "json", "jsonl", "ndjson", "rds")) {
+        stop("Choose a CSV, TSV, TXT, Excel, JSON, JSON Lines, or RDS file.", call. = FALSE)
       }
       markers <- if (is.null(input$na_values)) c("", "NA", "N/A", "NULL") else unique(c("", trimws(strsplit(input$na_values, ",", fixed = TRUE)[[1]])))
       data <- read_hub_file(input$file$datapath, filename = input$file$name,

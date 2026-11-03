@@ -28,6 +28,7 @@ Choose a data file, review the options, and select **Import data**. Imports are 
 | Excel (`.xlsx`, `.xls`) | Choose a worksheet before importing. Dates and numeric cells retain their types. |
 | JSON (`.json`) | A top-level array of record objects. Nested object fields become dotted column names, such as `student.id`. |
 | JSON Lines (`.jsonl`, `.ndjson`) | One record object per nonblank line, with the same nested-field handling as JSON. |
+| RDS (`.rds`) | A saved R data frame or tibble, with column types preserved. For example, create a file with `saveRDS(my_data, "data.rds")`. |
 
 Delimited and Excel imports offer header and missing-value settings. The default missing-value markers are `NA`, `N/A`, and `NULL`; empty cells are treated as missing. JSON `null` becomes a missing value. Blank column names receive generated names, and duplicate names are made unique. Nested arrays and other list-valued columns need to be converted into scalar columns before import.
 
@@ -72,6 +73,6 @@ Rscript --vanilla tests/test-data.R
 Rscript --vanilla -e 'source("renv/activate.R"); source("tests/test-server.R")'
 ```
 
-The helper tests cover delimited, Excel, JSON, and JSON Lines imports, quoted fields, validation limits, missing values, numeric summaries, and nested group identity. The server tests exercise the reactive import and exploration workflows, including Excel worksheet selection and JSON imports.
+The helper tests cover delimited, Excel, JSON, JSON Lines, and RDS imports, quoted fields, validation limits, missing values, numeric summaries, and nested group identity. The server tests exercise the reactive import and exploration workflows, including Excel worksheet selection, JSON imports, and RDS validation.
 
 Design references and the restraint principles used for the interface are recorded in [DESIGN.md](DESIGN.md).

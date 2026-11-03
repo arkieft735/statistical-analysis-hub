@@ -87,6 +87,19 @@ read_hub_file <- function(path, filename = basename(path), delimiter = ",", head
                          na_strings = na_strings, max_bytes = max_bytes,
                          max_rows = max_rows, decimal = decimal, max_columns = max_columns))
   }
+  if (extension == "rds") {
+    data <- tryCatch(readRDS(path), error = function(e) {
+      stop("The RDS file could not be read. Save a data frame with saveRDS() and try again.",
+           call. = FALSE)
+    })
+    if (!inherits(data, "data.frame")) {
+      stop("RDS must contain a data frame or tibble.", call. = FALSE)
+    }
+    # Use ordinary data-frame behavior without dispatching methods attached to
+    # a table subclass. Column types, including numeric and Date, are retained.
+    class(data) <- "data.frame"
+    return(hub_validate_table(data, max_rows, max_columns))
+  }
   if (extension %in% c("xlsx", "xls")) {
     hub_require_reader("readxl")
     if (!is.logical(header) || length(header) != 1L || is.na(header)) {
@@ -110,7 +123,7 @@ read_hub_file <- function(path, filename = basename(path), delimiter = ",", head
     return(hub_validate_table(data, max_rows, max_columns))
   }
   if (!extension %in% c("json", "jsonl", "ndjson")) {
-    stop("Choose CSV, TSV, TXT, XLSX, XLS, JSON, JSONL, or NDJSON.", call. = FALSE)
+    stop("Choose CSV, TSV, TXT, XLSX, XLS, JSON, JSONL, NDJSON, or RDS.", call. = FALSE)
   }
   hub_require_reader("jsonlite")
   connection <- file(path, open = "rb")

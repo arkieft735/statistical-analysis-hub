@@ -126,6 +126,48 @@ with_file("A;1,5", function(path) {
   expect_error(read_hub_file(path, "data.zip"), "Choose CSV")
 })
 
+with_rds <- function(object, test) {
+  # Shiny's temporary upload path does not retain the filename extension.
+  path <- tempfile()
+  on.exit(unlink(path))
+  saveRDS(object, path, compress = TRUE)
+  test(path)
+}
+native <- data.frame(score = c(12.5, NA_real_), date = as.Date(c("2026-01-01", "2026-01-02")),
+                      group = c("A", NA_character_), stringsAsFactors = FALSE)
+with_rds(native, function(path) {
+  imported <- read_hub_file(path, "study.rds")
+  stopifnot(identical(imported, native), is.numeric(imported$score), inherits(imported$date, "Date"))
+  expect_error(read_hub_file(path, "study.rds", max_rows = 1L), "row import limit")
+  expect_error(read_hub_file(path, "study.rds", max_columns = 1L), "column import limit")
+  expect_error(read_hub_file(path, "study.rds", max_bytes = 1L), "MB import limit")
+})
+tibble_like <- native
+class(tibble_like) <- c("tbl_df", "tbl", "data.frame")
+with_rds(tibble_like, function(path) {
+  imported <- read_hub_file(path, "study.rds")
+  stopifnot(identical(imported, native))
+})
+renamed <- data.frame(first = 1, second = 2, third = 3)
+names(renamed) <- c(" score ", "", "score")
+with_rds(renamed, function(path) {
+  stopifnot(identical(names(read_hub_file(path, "study.rds")), c("score", "Column 2", "score_1")))
+})
+for (object in list(list(score = 1:3), matrix(1:4, ncol = 2), stats::lm(mpg ~ cyl, data = mtcars))) {
+  with_rds(object, function(path) {
+    expect_error(read_hub_file(path, "study.rds"), "RDS must contain a data frame or tibble")
+  })
+}
+with_rds(data.frame(score = I(list(c(1, 2)))), function(path) {
+  expect_error(read_hub_file(path, "study.rds"), "Expand arrays")
+})
+with_rds(data.frame(score = numeric()), function(path) {
+  expect_error(read_hub_file(path, "study.rds"), "no data rows")
+})
+with_file("not an RDS file", function(path) {
+  expect_error(read_hub_file(path, "study.rds"), "could not be read")
+})
+
 if (requireNamespace("jsonlite", quietly = TRUE)) {
   for (example in c("examples/classroom-study.json", "examples/classroom-study.jsonl")) {
     imported <- read_hub_file(example)
