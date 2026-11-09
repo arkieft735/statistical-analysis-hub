@@ -1,0 +1,398 @@
+[
+  {
+    "school": "North School",
+    "class": "Class A",
+    "student": {
+      "id": "S1101",
+      "age": 12
+    },
+    "score": 66.0,
+    "attendance": 85,
+    "cohort": "Control"
+  },
+  {
+    "school": "North School",
+    "class": "Class A",
+    "student": {
+      "id": "S1102",
+      "age": 13
+    },
+    "score": 69.0,
+    "attendance": 87,
+    "cohort": "Control"
+  },
+  {
+    "school": "North School",
+    "class": "Class A",
+    "student": {
+      "id": "S1103",
+      "age": 14
+    },
+    "score": 72.0,
+    "attendance": 89,
+    "cohort": "Control"
+  },
+  {
+    "school": "North School",
+    "class": "Class A",
+    "student": {
+      "id": "S1104",
+      "age": 12
+    },
+    "score": 75.0,
+    "attendance": 91,
+    "cohort": "Control"
+  },
+  {
+    "school": "North School",
+    "class": "Class A",
+    "student": {
+      "id": "S1105",
+      "age": 13
+    },
+    "score": null,
+    "attendance": 93,
+    "cohort": "Control"
+  },
+  {
+    "school": "North School",
+    "class": "Class A",
+    "student": {
+      "id": "S1106",
+      "age": 14
+    },
+    "score": 81.0,
+    "attendance": 95,
+    "cohort": "Control"
+  },
+  {
+    "school": "North School",
+    "class": "Class B",
+    "student": {
+      "id": "S1201",
+      "age": 12
+    },
+    "score": 69.0,
+    "attendance": 89,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "North School",
+    "class": "Class B",
+    "student": {
+      "id": "S1202",
+      "age": 13
+    },
+    "score": 72.0,
+    "attendance": 91,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "North School",
+    "class": "Class B",
+    "student": {
+      "id": "S1203",
+      "age": 14
+    },
+    "score": 75.0,
+    "attendance": 93,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "North School",
+    "class": "Class B",
+    "student": {
+      "id": "S1204",
+      "age": 12
+    },
+    "score": 78.0,
+    "attendance": 95,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "North School",
+    "class": "Class B",
+    "student": {
+      "id": "S1205",
+      "age": 13
+    },
+    "score": null,
+    "attendance": 97,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "North School",
+    "class": "Class B",
+    "student": {
+      "id": "S1206",
+      "age": 14
+    },
+    "score": 84.0,
+    "attendance": 99,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class A",
+    "student": {
+      "id": "S2101",
+      "age": 12
+    },
+    "score": 70.0,
+    "attendance": 88,
+    "cohort": "Control"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class A",
+    "student": {
+      "id": "S2102",
+      "age": 13
+    },
+    "score": 73.0,
+    "attendance": 90,
+    "cohort": "Control"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class A",
+    "student": {
+      "id": "S2103",
+      "age": 14
+    },
+    "score": 76.0,
+    "attendance": 92,
+    "cohort": "Control"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class A",
+    "student": {
+      "id": "S2104",
+      "age": 12
+    },
+    "score": 79.0,
+    "attendance": 94,
+    "cohort": "Control"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class A",
+    "student": {
+      "id": "S2105",
+      "age": 13
+    },
+    "score": null,
+    "attendance": 96,
+    "cohort": "Control"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class A",
+    "student": {
+      "id": "S2106",
+      "age": 14
+    },
+    "score": 85.0,
+    "attendance": 98,
+    "cohort": "Control"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class B",
+    "student": {
+      "id": "S2201",
+      "age": 12
+    },
+    "score": 73.0,
+    "attendance": 92,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class B",
+    "student": {
+      "id": "S2202",
+      "age": 13
+    },
+    "score": 76.0,
+    "attendance": 94,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class B",
+    "student": {
+      "id": "S2203",
+      "age": 14
+    },
+    "score": 79.0,
+    "attendance": 96,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class B",
+    "student": {
+      "id": "S2204",
+      "age": 12
+    },
+    "score": 82.0,
+    "attendance": 98,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class B",
+    "student": {
+      "id": "S2205",
+      "age": 13
+    },
+    "score": null,
+    "attendance": 100,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "Riverside School",
+    "class": "Class B",
+    "student": {
+      "id": "S2206",
+      "age": 14
+    },
+    "score": 88.0,
+    "attendance": 86,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "West School",
+    "class": "Class A",
+    "student": {
+      "id": "S3101",
+      "age": 12
+    },
+    "score": 74.0,
+    "attendance": 91,
+    "cohort": "Control"
+  },
+  {
+    "school": "West School",
+    "class": "Class A",
+    "student": {
+      "id": "S3102",
+      "age": 13
+    },
+    "score": 77.0,
+    "attendance": 93,
+    "cohort": "Control"
+  },
+  {
+    "school": "West School",
+    "class": "Class A",
+    "student": {
+      "id": "S3103",
+      "age": 14
+    },
+    "score": 80.0,
+    "attendance": 95,
+    "cohort": "Control"
+  },
+  {
+    "school": "West School",
+    "class": "Class A",
+    "student": {
+      "id": "S3104",
+      "age": 12
+    },
+    "score": 83.0,
+    "attendance": 97,
+    "cohort": "Control"
+  },
+  {
+    "school": "West School",
+    "class": "Class A",
+    "student": {
+      "id": "S3105",
+      "age": 13
+    },
+    "score": null,
+    "attendance": 99,
+    "cohort": "Control"
+  },
+  {
+    "school": "West School",
+    "class": "Class A",
+    "student": {
+      "id": "S3106",
+      "age": 14
+    },
+    "score": 89.0,
+    "attendance": 85,
+    "cohort": "Control"
+  },
+  {
+    "school": "West School",
+    "class": "Class B",
+    "student": {
+      "id": "S3201",
+      "age": 12
+    },
+    "score": 77.0,
+    "attendance": 95,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "West School",
+    "class": "Class B",
+    "student": {
+      "id": "S3202",
+      "age": 13
+    },
+    "score": 80.0,
+    "attendance": 97,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "West School",
+    "class": "Class B",
+    "student": {
+      "id": "S3203",
+      "age": 14
+    },
+    "score": 83.0,
+    "attendance": 99,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "West School",
+    "class": "Class B",
+    "student": {
+      "id": "S3204",
+      "age": 12
+    },
+    "score": 86.0,
+    "attendance": 85,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "West School",
+    "class": "Class B",
+    "student": {
+      "id": "S3205",
+      "age": 13
+    },
+    "score": null,
+    "attendance": 87,
+    "cohort": "Intervention"
+  },
+  {
+    "school": "West School",
+    "class": "Class B",
+    "student": {
+      "id": "S3206",
+      "age": 14
+    },
+    "score": 92.0,
+    "attendance": 89,
+    "cohort": "Intervention"
+  }
+]

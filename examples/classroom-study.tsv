@@ -1,0 +1,37 @@
+school	class	student	age	score	attendance	cohort
+North School	Class A	S1101	12	66	85	Control
+North School	Class A	S1102	13	69	87	Control
+North School	Class A	S1103	14	72	89	Control
+North School	Class A	S1104	12	75	91	Control
+North School	Class A	S1105	13		93	Control
+North School	Class A	S1106	14	81	95	Control
+North School	Class B	S1201	12	69	89	Intervention
+North School	Class B	S1202	13	72	91	Intervention
+North School	Class B	S1203	14	75	93	Intervention
+North School	Class B	S1204	12	78	95	Intervention
+North School	Class B	S1205	13		97	Intervention
+North School	Class B	S1206	14	84	99	Intervention
+Riverside School	Class A	S2101	12	70	88	Control
+Riverside School	Class A	S2102	13	73	90	Control
+Riverside School	Class A	S2103	14	76	92	Control
+Riverside School	Class A	S2104	12	79	94	Control
+Riverside School	Class A	S2105	13		96	Control
+Riverside School	Class A	S2106	14	85	98	Control
+Riverside School	Class B	S2201	12	73	92	Intervention
+Riverside School	Class B	S2202	13	76	94	Intervention
+Riverside School	Class B	S2203	14	79	96	Intervention
+Riverside School	Class B	S2204	12	82	98	Intervention
+Riverside School	Class B	S2205	13		100	Intervention
+Riverside School	Class B	S2206	14	88	86	Intervention
+West School	Class A	S3101	12	74	91	Control
+West School	Class A	S3102	13	77	93	Control
+West School	Class A	S3103	14	80	95	Control
+West School	Class A	S3104	12	83	97	Control
+West School	Class A	S3105	13		99	Control
+West School	Class A	S3106	14	89	85	Control
+West School	Class B	S3201	12	77	95	Intervention
+West School	Class B	S3202	13	80	97	Intervention
+West School	Class B	S3203	14	83	99	Intervention
+West School	Class B	S3204	12	86	85	Intervention
+West School	Class B	S3205	13		87	Intervention
+West School	Class B	S3206	14	92	89	Intervention
